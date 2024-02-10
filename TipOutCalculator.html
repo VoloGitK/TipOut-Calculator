@@ -1,61 +1,72 @@
-theme: jekyll-theme-minimal
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tip Out Calculator</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <style>
-        /* Additional CSS styles */
         .result-container {
             background-color: #f8f9fa;
             padding: 1rem;
             border-radius: 0.5rem;
             margin-top: 1rem;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            border: 1px solid red; /* Add red border */
         }
-
-        .result-container h3 {
-            margin-top: 0;
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
-
-        .result-container div {
-            margin-bottom: 0.5rem;
+        .results, .tip-outs {
+            flex: 1;
+            margin: 0.5rem;
+            min-width: 250px;
         }
-
-        .result-container div span {
+        .result-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .result-container td {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+        }
+        .result-container tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+        .positive, .negative {
             font-weight: bold;
         }
-
-        /* Updated styles for dropdown boxes */
-        select {
-            width: 100%;
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-            background-color: #e9ecef; /* Lighter background color */
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem;
-            appearance: none;
-        }
-
-        /* Updated styles for highlighted values */
         .positive {
             color: red;
         }
-
         .negative {
-            color: red;
+            color: green;
         }
-
-        /* Added style for highlighting row */
         .highlighted-row {
-            background-color: #dff0d8; /* Light green background for positive values */
+            font-weight: bold;
+            color: #006400; /* Dark green */
         }
-
-        /* Added style for negative sign */
-        .negative:before {
-            content: "-";
+        .great-job {
+            color: green;
+            font-size: smaller;
+            margin-top: 1rem;
+        }
+        .warning-message {
+            color: red;
+            font-size: smaller; /* Not bold, as requested */
+            margin-top: 10px;
+        }
+        .total-earned {
+            font-weight: bold;
+            color: white;
+            background-color: green;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.2rem;
+        }
+        .negative-sign {
+            visibility: hidden; /* Hide negative sign */
         }
     </style>
 </head>
@@ -68,43 +79,87 @@ theme: jekyll-theme-minimal
         </hgroup>
         <div class="input-container">
             <label for="totalSale">Total Sales</label>
-            <input type="number" id="totalSale" name="totalSale" placeholder="Enter total sales">
+            <input type="number" id="totalSale" placeholder="Enter total sales">
             <label for="netSales">Net Sales</label>
-            <input type="number" id="netSales" name="netSales" placeholder="Enter net sales">
+            <input type="number" id="netSales" placeholder="Enter net sales">
             <label for="serviceCharge">Service Charge</label>
-            <input type="number" id="serviceCharge" name="serviceCharge" placeholder="Enter service charge">
+            <input type="number" id="serviceCharge" placeholder="Enter service charge">
             <label for="cash">Cash</label>
-            <input type="number" id="cash" name="cash" placeholder="Enter amount of cash">
-            <!-- Shortened dropdown for Bar Tip Out -->
+            <input type="number" id="cash" placeholder="Enter amount of cash">
             <label for="barTipOut">Bar Tip Out</label>
-            <select id="barTipOut" name="barTipOut">
+            <select id="barTipOut">
                 <option value="0">None</option>
                 <option value="1">1%</option>
             </select>
-            <!-- Shortened dropdown for Host/Expo Tip Out -->
             <label for="hostExpoTipOut">Host/Expo Tip Out</label>
-            <select id="hostExpoTipOut" name="hostExpoTipOut">
+            <select id="hostExpoTipOut">
                 <option value="0">None</option>
                 <option value="0.5">0.5%</option>
                 <option value="1">1%</option>
             </select>
-            <button id="calculateButton" onclick="calculate()">Calculate</button>
-            <button id="clearButton" onclick="clearFields()">Clear</button>
+            <button onclick="calculate()">Calculate</button>
+            <button onclick="clearFields()">Clear</button>
         </div>
         <div class="result-container">
-            <!-- Result container -->
-            <h3>Results</h3>
-            <div>Total Checks Paid: <span id="totalChecksPaid">$0.00</span></div>
-            <div>Minus Total Non-Cash Items: <span id="minusTotalNonCashItems">$0.00</span></div>
-            <div>Plus 2.5%: <span id="plusTwoPointFivePercentage">$0.00</span></div>
-            <div>Minus Service Charge: <span id="minusServiceCharge">$0.00</span></div>
-            <div class="total-earned">Equals Net Cash Due: <span id="equalsNetCashDue">$0.00</span></div>
-            <h3>Tip Out</h3>
-            <div>Bar Amount: <span id="barAmount">$0.00</span></div>
-            <div>Host/Expo Amount: <span id="hostExpoAmount">$0.00</span></div>
-            <div>House Amount: <span id="houseAmount">$0.00</span></div>
-            <div>Kitchen Amount: <span id="kitchenAmount">$0.00</span></div>
-            <div class="total-earned">Total Earned: <span id="totalEarned">$0.00</span></div>
+            <div class="flex-container">
+                <div class="results">
+                    <h3>Envelope Output</h3>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>Total Checks Paid:</td>
+                                <td><span id="totalChecksPaid">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>Minus Total Non-Cash Items:</td>
+                                <td><span id="minusTotalNonCashItems">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>Plus 2.5%:</td>
+                                <td><span id="plusTwoPointFivePercentage">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>Minus Service Charge:</td>
+                                <td><span id="minusServiceCharge">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>Equals Net Cash Due:</td>
+                                <td><span id="equalsNetCashDue">$0.00</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div id="netCashDueWarning" class="warning-message" style="display:none;"></div>
+                </div>
+                <div class="tip-outs">
+                    <h3>Tip Out</h3>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>Bar Amount:</td>
+                                <td><span id="barAmount">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>Host/Expo Amount:</td>
+                                <td><span id="hostExpoAmount">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>House Amount:</td>
+                                <td><span id="houseAmount">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>Kitchen Amount:</td>
+                                <td><span id="kitchenAmount">$0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td>Total Earned:</td>
+                                <td><span id="totalEarned" class="total-earned">$0.00</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p id="dueBackMessage" class="warning-message" style="display:none;"></p>
+                    <div id="greatJobMessage" class="great-job"></div>
+                </div>
+            </div>
         </div>
     </section>
 </main>
@@ -112,96 +167,75 @@ theme: jekyll-theme-minimal
     <small><a href="#">Privacy Policy</a> • <a href="#">Terms of Use</a></small>
 </footer>
 <script>
-    // JavaScript for calculator functionality...
+function calculate() {
+    const totalSale = parseFloat(document.getElementById('totalSale').value) || 0;
+    const netSales = parseFloat(document.getElementById('netSales').value) || 0;
+    const serviceCharge = parseFloat(document.getElementById('serviceCharge').value) || 0;
+    const cash = parseFloat(document.getElementById('cash').value) || 0;
+    const barTipOutPercent = parseFloat(document.getElementById('barTipOut').value) || 0;
+    const hostExpoTipOutPercent = parseFloat(document.getElementById('hostExpoTipOut').value) || 0;
 
-    function calculate() {
-        // Retrieve input values
-        const totalSale = parseFloat(document.getElementById("totalSale").value) || 0;
-        const netSales = parseFloat(document.getElementById("netSales").value) || 0;
-        const serviceCharge = parseFloat(document.getElementById("serviceCharge").value) || 0;
-        const cash = parseFloat(document.getElementById("cash").value) || 0;
-        const barTipOutPercent = parseFloat(document.getElementById("barTipOut").value) || 0;
-        const hostExpoTipOutPercent = parseFloat(document.getElementById("hostExpoTipOut").value) || 0;
+    const totalChecksPaid = totalSale;
+    const minusTotalNonCashItems = totalSale - cash;
+    const plusTwoPointFivePercentage = serviceCharge * 0.025;
+    const minusServiceCharge = serviceCharge;
+    const equalsNetCashDue = totalSale - minusTotalNonCashItems + plusTwoPointFivePercentage - serviceCharge;
 
-        // Placeholder calculations for demonstration
-        const totalChecksPaid = totalSale;
-        const minusTotalNonCashItems = totalSale - cash;
-        const plusTwoPointFivePercentage = (serviceCharge * 2.5) / 100;
-        const minusServiceCharge = serviceCharge;
-        const equalsNetCashDue = totalSale - (totalSale - cash) + ((serviceCharge * 2.5) / 100) - serviceCharge;
+    const barAmount = netSales * (barTipOutPercent / 100);
+    const hostExpoAmount = netSales * (hostExpoTipOutPercent / 100);
+    const houseAmount = netSales * 0.02;
+    const kitchenAmount = netSales * 0.025;
+    const totalEarned = serviceCharge - (barAmount + hostExpoAmount + houseAmount + kitchenAmount + plusTwoPointFivePercentage);
 
-        // Placeholder tip out amounts
-        const barAmount = netSales * (barTipOutPercent / 100);
-        const hostExpoAmount = netSales * (hostExpoTipOutPercent / 100);
-        const houseAmount = netSales * 0.02; // Placeholder value for demonstration
-        const kitchenAmount = netSales * 0.025; // Placeholder value for demonstration
-        const totalEarned = serviceCharge - (barAmount + hostExpoAmount + houseAmount + kitchenAmount + plusTwoPointFivePercentage);
+    document.getElementById('totalChecksPaid').textContent = `$${totalChecksPaid.toFixed(2)}`;
+    document.getElementById('minusTotalNonCashItems').textContent = `$${minusTotalNonCashItems.toFixed(2)}`;
+    document.getElementById('plusTwoPointFivePercentage').textContent = `$${plusTwoPointFivePercentage.toFixed(2)}`;
+    document.getElementById('minusServiceCharge').textContent = `$${minusServiceCharge.toFixed(2)}`;
+    document.getElementById('equalsNetCashDue').textContent = `$${equalsNetCashDue.toFixed(2)}`;
+    document.getElementById('equalsNetCashDue').className = equalsNetCashDue >= 0 ? 'positive' : 'negative';
 
-        // Display results
-        document.getElementById("totalChecksPaid").textContent = `$${totalChecksPaid.toFixed(2)}`;
-        document.getElementById("minusTotalNonCashItems").textContent = `$${minusTotalNonCashItems.toFixed(2)}`;
-        document.getElementById("plusTwoPointFivePercentage").textContent = `$${plusTwoPointFivePercentage.toFixed(2)}`;
-        document.getElementById("minusServiceCharge").textContent = `$${minusServiceCharge.toFixed(2)}`;
-        document.getElementById("equalsNetCashDue").textContent = `$${equalsNetCashDue.toFixed(2)}`;
+    // Add the ⚠ sign if the value is positive
+    document.getElementById('equalsNetCashDue').innerHTML += equalsNetCashDue >= 0 ? " ⚠" : "";
 
-        // Update color and add additional text if equalsNetCashDue is positive
-        const equalsNetCashDueElement = document.getElementById("equalsNetCashDue");
-        if (equalsNetCashDue > 0) {
-            equalsNetCashDueElement.classList.add("positive");
-            const additionalText = document.createElement("p");
-            additionalText.textContent = "The specified sum is required to be tendered in cash and securely enclosed within an envelope.";
-            additionalText.style.color = "red";
-            additionalText.style.fontSize = "small";
-            additionalText.innerHTML += "&nbsp;&#9888;"; // Small attention sign
-            equalsNetCashDueElement.parentNode.appendChild(additionalText);
-        } else {
-            equalsNetCashDueElement.classList.remove("positive");
-            // Remove additional text if equalsNetCashDue is not positive
-            const additionalText = equalsNetCashDueElement.parentNode.querySelector("p");
-            if (additionalText) {
-                additionalText.remove();
-            }
-        }
+    const dueBack = equalsNetCashDue + houseAmount + kitchenAmount;
+    document.getElementById('dueBackMessage').textContent = dueBack >= 0 ? "No Due Back" : `Due Back: $${Math.abs(dueBack).toFixed(2)}`;
+    document.getElementById('dueBackMessage').style.display = 'block';
+    document.getElementById('dueBackMessage').className = dueBack >= 0 ? 'positive' : 'negative';
 
-        // Display tip out amounts and total earned
-        document.getElementById("barAmount").textContent = `$${barAmount.toFixed(2)}`;
-        document.getElementById("hostExpoAmount").textContent = `$${hostExpoAmount.toFixed(2)}`;
-        document.getElementById("houseAmount").textContent = `$${houseAmount.toFixed(2)}`;
-        document.getElementById("kitchenAmount").textContent = `$${kitchenAmount.toFixed(2)}`;
-        document.getElementById("totalEarned").textContent = `$${totalEarned.toFixed(2)}`;
+    document.getElementById('barAmount').textContent = `$${barAmount.toFixed(2)}`;
+    document.getElementById('hostExpoAmount').textContent = `$${hostExpoAmount.toFixed(2)}`;
+    document.getElementById('houseAmount').textContent = `$${houseAmount.toFixed(2)}`;
+    document.getElementById('kitchenAmount').textContent = `$${kitchenAmount.toFixed(2)}`;
+    document.getElementById('totalEarned').textContent = `$${totalEarned.toFixed(2)}`;
 
-        // Highlighting positive and negative values
-        highlightValue(totalEarned, "totalEarned");
-        highlightValue(equalsNetCashDue, "equalsNetCashDue");
+    const greatJobMessageElement = document.getElementById('greatJobMessage');
+    greatJobMessageElement.textContent = totalEarned > 0 ? `Great Job!!! You've earned ${((totalEarned / netSales) * 100).toFixed(2)}% of Net Sales.` : "";
+
+    // Warning for Equals Net Cash Due
+    if (equalsNetCashDue > 0) {
+        document.getElementById('netCashDueWarning').innerHTML = "⚠ The specified sum is required to be tendered in cash and enclosed within an envelope.";
+        document.getElementById('netCashDueWarning').style.display = "block";
+    } else {
+        document.getElementById('netCashDueWarning').style.display = "none";
     }
 
-    function clearFields() {
-        // Clear all input fields
-        document.querySelectorAll('input[type="number"]').forEach(input => input.value = "");
-
-        // Clear the results display
-        document.querySelectorAll('.result-container span').forEach(span => span.textContent = "$0.00");
-
-        // Remove highlight class from Total Earned row
-        document.querySelectorAll('.total-earned').forEach(row => row.classList.remove("highlighted-row"));
+    // Tip Out Check Deduction
+    if (dueBack >= 0) {
+        const tipOutCheckDeduction = houseAmount + kitchenAmount;
+        document.getElementById('dueBackMessage').innerHTML = `<div style="font-size: smaller; font-weight: normal; color: red; border: 1px solid red; padding: 5px;">No Due Back!<br><span style="font-size: smaller; font-weight: normal; color: red;">Check Deduction for Tip Out:</span> <span class="negative-sign">-</span><span style="color: red; background-color: rgba(255, 0, 0, 0.1); padding: 2px;">$${Math.abs(tipOutCheckDeduction).toFixed(2)}</span></div>`;
+        document.getElementById('dueBackMessage').style.display = 'block';
+        document.getElementById('dueBackMessage').className = 'positive';
     }
+}
 
-    function highlightValue(value, id) {
-        const element = document.getElementById(id);
-        if (value >= 0) {
-            element.classList.remove("negative");
-            element.classList.add("positive");
-        } else {
-            element.classList.remove("positive");
-            element.classList.add("negative");
-        }
-
-        // Highlight Total Earned row
-        if (id === "totalEarned") {
-            const parentDiv = element.parentElement;
-            parentDiv.classList.add("highlighted-row");
-        }
-    }
+function clearFields() {
+    document.querySelectorAll('input, select').forEach(element => element.value = '');
+    document.querySelectorAll('.result-container span').forEach(span => span.textContent = '$0.00');
+    document.getElementById('netCashDueWarning').style.display = 'none';
+    document.getElementById('dueBackMessage').style.display = 'none';
+    document.getElementById('greatJobMessage').textContent = '';
+}
 </script>
 </body>
 </html>
+
